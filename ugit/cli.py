@@ -1,5 +1,10 @@
+# This file is in charge of parsing and processing user input
+
 import argparse
 # Python built-in module for parsing command-line arguments.
+import os
+
+from . import data
 
 def main():
     args = parse_args()
@@ -21,4 +26,5 @@ def parse_args():
 
 
 def init(args):
-    print("Initializing ugit repository...")
+    data.init()
+    print(f'Initialized ugit repository in {os.getcwd()}/{data.GIT_DIR}')
