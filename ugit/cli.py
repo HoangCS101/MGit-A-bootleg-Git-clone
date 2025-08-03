@@ -57,7 +57,7 @@ def hash_object(args):
         
 def cat_file(args):
     sys.stdout.flush()
-    sys.stdout.buffer.write(data.get_object(args.object))
+    sys.stdout.buffer.write(data.get_object(args.object, expected='blob'))
     
     # Here we use sys.stdout.buffer to write binary data directly to stdout.
     # Before that, we flush stdout to ensure that any buffered output is written immediately.
