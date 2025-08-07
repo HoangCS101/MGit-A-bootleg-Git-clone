@@ -5,6 +5,7 @@ import argparse
 import os
 import sys
 
+from . import base
 from . import data
 
 def main():
@@ -43,6 +44,9 @@ def parse_args():
     cat_file_parser.set_defaults(func=cat_file)
     cat_file_parser.add_argument('object')
     
+    write_tree_parser = commands.add_parser('write-tree')
+    write_tree_parser.set_defaults(func=write_tree)
+    
     return parser.parse_args()
     # This should return Namespace(command='init', func=<function 'init' below>) for 'ugit init'
 
@@ -62,3 +66,6 @@ def cat_file(args):
     # Here we use sys.stdout.buffer to write binary data directly to stdout.
     # Before that, we flush stdout to ensure that any buffered output is written immediately.
     # For example, if before this line there was a print statement, it would be flushed before writing the binary data.
+
+def write_tree(args):
+    print(base.write_tree())
