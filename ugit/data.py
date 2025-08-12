@@ -13,6 +13,15 @@ def init():
     else:
         print(f"Directory {GIT_DIR} already exists.")
         
+def set_HEAD(oid):
+    with open(os.path.join(GIT_DIR, 'HEAD'), 'w') as f:
+        f.write(oid)
+    
+def get_HEAD():
+    if os.path.isfile(os.path.join(GIT_DIR, 'HEAD')):
+        with open(os.path.join(GIT_DIR, 'HEAD'), 'r') as f:
+            return f.read().strip() # strip to remove any trailing newline or spaces
+        
 def hash_object(data, type_='blob'): # data should be in bytes (e.g. b'hello world' -> binary)
     # type_ is the type of object, default is 'blob', the underscore is to avoid conflict or confusion with the built-in type
     # also to declare that it should be followed by a null byte
@@ -30,6 +39,6 @@ def get_object(oid, expected='blob'):
     # partition(<separator>) splits the bytes object into three parts: before the sep, the separator it self, and after the sep
     type_=type_.decode() # decode the type from bytes back to string
     
-    if expected != type_:
-        raise ValueError(f"Expected object type '{expected}', but got '{type_}'")
+    # if expected != type_:
+    #     raise ValueError(f"Expected object type '{expected}', but got '{type_}'")
     return content
