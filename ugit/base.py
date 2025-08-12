@@ -1,7 +1,11 @@
 # For basic higher-level logic for ugit
 # For example, using the object database implemented in data.py to implement higher-level structures for storing directories
 
+import itertools
+import operator
 import os
+
+from collections import namedtuple
 
 from . import data
 
@@ -107,6 +111,27 @@ def commit(message):
     oid = data.hash_object(commit.encode(), type_='commit')
     data.set_HEAD(oid)
     return oid
+
+Commit = namedtuple('Commit', ['tree', 'parent', 'message'])
+
+def get_commit(oid):
+    parent = None
+    
+    commit = data.get_object(oid, expected='commit').decode()
+    lines = iter(commit.splitlines())
+    for line in itertools.takewhile(operator.truth, lines):
+        # takewhile will stop when encountering an empty line
+        key, value = line.split(' ', 1)
+        if key == 'tree':
+            tree = value
+        elif key == 'parent':
+            parent = value
+        else:
+            assert False, f'Unknown field {key} in commit {oid}'
+    
+    message = '\n'.join(lines)
+    # since the first 3 lines are iterated, the remaining line is the message
+    return Commit(tree=tree, parent=parent, message=message)
 
 def is_ignored(path):
     return '.ugit' in path.split('/')
