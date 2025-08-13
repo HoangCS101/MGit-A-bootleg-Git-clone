@@ -112,6 +112,12 @@ def commit(message):
     data.set_HEAD(oid)
     return oid
 
+# call read_tree and set HEAD to the commit OID
+def checkout (oid):
+    commit = get_commit(oid)
+    read_tree(commit.tree)
+    data.set_HEAD(oid)
+
 Commit = namedtuple('Commit', ['tree', 'parent', 'message'])
 
 def get_commit(oid):
