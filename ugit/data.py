@@ -13,13 +13,18 @@ def init():
     else:
         print(f"Directory {GIT_DIR} already exists.")
         
-def set_HEAD(oid):
-    with open(os.path.join(GIT_DIR, 'HEAD'), 'w') as f:
+def update_ref(ref, oid):
+    ref_path = os.path.join(GIT_DIR, ref)
+    os.makedirs(os.path.dirname(ref_path), exist_ok=True)
+    # exits_ok=True will not raise an error if the directory already exists
+    with open(ref_path, 'w') as f:
         f.write(oid)
     
-def get_HEAD():
-    if os.path.isfile(os.path.join(GIT_DIR, 'HEAD')):
-        with open(os.path.join(GIT_DIR, 'HEAD'), 'r') as f:
+def get_ref(ref):
+    ref_path = os.path.join(GIT_DIR, ref)
+    if os.path.isfile(ref_path):
+        # Check if the ref file exists first, we don't want to create a file if it doesn't exist
+        with open(ref_path, 'r') as f:
             return f.read().strip() # strip to remove any trailing newline or spaces
         
 def hash_object(data, type_='blob'): # data should be in bytes (e.g. b'hello world' -> binary)
