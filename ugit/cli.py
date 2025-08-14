@@ -3,6 +3,7 @@
 import argparse
 # Python built-in module for parsing command-line arguments.
 import os
+import subprocess
 import sys
 import textwrap
 
@@ -73,7 +74,10 @@ def parse_args():
     tag_parser.add_argument('name')
     tag_parser.add_argument('oid', default='@', type=oid, nargs='?')
     
+    k_parser = commands.add_parser('k')
+    k_parser.set_defaults(func=k)
     
+    # 'ugit k' command, similar to 'gitk', lists all refs
     
     return parser.parse_args()
     # This should return Namespace(command='init', func=<function 'init' below>) for 'ugit init'
@@ -120,3 +124,26 @@ def checkout(args):
 
 def tag(args):
     base.create_tag(args.name, args.oid)
+    
+def k(args):
+    dot = 'digraph commits {\n'
+    
+    oids = set()
+    for refname, ref in data.iter_refs():
+        dot += f'"{refname}" [shape=note]\n'
+        dot += f'"{refname}" -> "{ref}"\n'
+        oids.add(ref)
+    
+    for oid in base.iter_commits_and_parents(oids):
+        commit = base.get_commit(oid)
+        dot += f'"{oid}" [shape=box style=filled lable="{oid[:10]}"]\n'
+        if commit.parent:
+            dot += f'"{oid}" -> "{commit.parent}"\n'
+        
+    dot += '}'
+    print(dot)
+    
+    with subprocess.Popen(
+            ['dot', '-Tx11', '/dev/stdin'], # '-Tgtk' is not supported anymore
+            stdin=subprocess.PIPE) as proc:
+        proc.communicate(input=dot.encode())

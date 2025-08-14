@@ -20,12 +20,35 @@ def update_ref(ref, oid):
     with open(ref_path, 'w') as f:
         f.write(oid)
     
-def get_ref(ref):
+def get_ref(ref): # ref here is expected to be a relative path from GIT_DIR
     ref_path = os.path.join(GIT_DIR, ref)
     if os.path.isfile(ref_path):
         # Check if the ref file exists first, we don't want to create a file if it doesn't exist
         with open(ref_path, 'r') as f:
             return f.read().strip() # strip to remove any trailing newline or spaces
+
+def iter_refs():
+    refs = ['HEAD']
+    for root, _, filenames in os.walk(os.path.join(GIT_DIR, 'refs')):
+        # root = '.../.ugit/refs/tags' (second level)
+        # for example, if the file structure is:
+        # .../.ugit/
+        #       refs/
+        #          tags/
+        #           fileA
+        #           fileB
+        # then os.walk will yield:
+        # first level: root = '.../.ugit/refs', dirnames = ['tags'], filenames = []
+        # second level: root = '.../.ugit/refs/tags', dirnames = [], filenames = ['fileA', 'fileB']
+        
+        root = os.path.relpath(root, GIT_DIR)
+        # from GIT_DIR = '.../.ugit' to root, relpath returns 'refs/tags'
+        
+        refs.extend(os.path.join(root, f) for f in filenames)
+        # += 'refs/tags/filename' for each file in the 'refs/tags' directory
+        
+    for refname in refs:
+        yield refname, get_ref(refname)
         
 def hash_object(data, type_='blob'): # data should be in bytes (e.g. b'hello world' -> binary)
     # type_ is the type of object, default is 'blob', the underscore is to avoid conflict or confusion with the built-in type
