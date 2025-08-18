@@ -10,6 +10,10 @@ from collections import deque, namedtuple
 
 from . import data
 
+def init():
+    data.init()
+    data.update_ref('HEAD', data.RefValue(symbolic=True, value='refs/heads/master'))
+
 def write_tree(directory='.'):
     entries = []
     with os.scandir(directory) as it:
@@ -132,7 +136,19 @@ def create_tag(name, oid):
 def create_branch(name, oid):
     data.update_ref(os.path.join('refs', 'heads', name), data.RefValue(symbolic=False,value=oid))
 
+def get_branch_name():
+    HEAD = data.get_ref('HEAD', deref=False)
+    if not HEAD.symbolic:
+        return None
+    HEAD= HEAD.value
+    assert HEAD.startswith('refs/heads/')
+    return os.path.relpath(HEAD, 'refs/heads')
+
 Commit = namedtuple('Commit', ['tree', 'parent', 'message'])
+
+def iter_branch_name():
+    for refname, _ in data.iter_refs('refs/heads/'):
+        yield os.path.relpath(refname, 'refs/heads/')
 
 def is_branch(branch):
     return data.get_ref(f'refs/heads/{branch}').value is not None

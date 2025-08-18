@@ -80,15 +80,18 @@ def parse_args():
     
     branch_parser = commands.add_parser('branch')
     branch_parser.set_defaults(func=branch)
-    branch_parser.add_argument('name')
+    branch_parser.add_argument('name', nargs='?')
     branch_parser.add_argument('start_point', default='@', type=oid, nargs='?')
+    
+    status_parser = commands.add_parser('status')
+    status_parser.set_defaults(func=status)
     
     return parser.parse_args()
     # This should return Namespace(command='init', func=<function 'init' below>) for 'ugit init'
 
 
 def init(args):
-    data.init()
+    base.init()
     print(f'Initialized ugit repository in {os.getcwd()}/{data.GIT_DIR}')
     
 def hash_object(args):
@@ -130,8 +133,14 @@ def tag(args):
     base.create_tag(args.name, args.oid)
 
 def branch(args):
-    base.create_branch(args.name, args.start_point)
-    print(f'Branch {args.name} created at {args.start_point[:10]}')
+    if not args.name:
+        current = base.get_branch_name()
+        for branch in base.iter_branch_name():
+            prefix = '*' if branch == current else ' '
+            print(f'{prefix} {branch}')
+    else:
+        base.create_branch(args.name, args.start_point)
+        print(f'Branch {args.name} created at {args.start_point[:10]}')
     
 def k(args):
     dot = 'digraph commits {\n'
@@ -156,3 +165,12 @@ def k(args):
             ['dot', '-Tx11', '/dev/stdin'], # '-Tgtk' is not supported anymore
             stdin=subprocess.PIPE) as proc:
         proc.communicate(input=dot.encode())
+        
+def status(args):
+    HEAD = base.get_oid('@')
+    branch = base.get_branch_name()
+    if branch:
+        print(f'On branch {branch}')
+    else:
+        print(f'HEAD deached at {HEAD[:10]}')
+    

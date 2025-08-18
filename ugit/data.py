@@ -56,7 +56,7 @@ def _get_ref_internal(ref, deref):
     
     return ref, RefValue(symbolic=symbolic, value=value)
     
-def iter_refs(deref=True):
+def iter_refs(prefix='', deref=True):
     refs = ['HEAD']
     for root, _, filenames in os.walk(os.path.join(GIT_DIR, 'refs')):
         # root = '.../.ugit/refs/tags' (second level)
@@ -77,6 +77,8 @@ def iter_refs(deref=True):
         # += 'refs/tags/filename' for each file in the 'refs/tags' directory
         
     for refname in refs:
+        if not refname.startswith(prefix):
+            continue
         yield refname, get_ref(refname, deref=deref)
         
 def hash_object(data, type_='blob'): # data should be in bytes (e.g. b'hello world' -> binary)
