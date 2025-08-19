@@ -130,6 +130,9 @@ def checkout (name): # name could be and OID or a branch name
         
     data.update_ref('HEAD', HEAD, deref=False)
 
+def reset(oid):
+    data.update_ref('HEAD', data.RefValue(symbolic=False, value=oid))
+
 def create_tag(name, oid):
     data.update_ref(os.path.join('refs', 'tags', name), data.RefValue(symbolic=False,value=oid))
 

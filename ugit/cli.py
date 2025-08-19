@@ -86,6 +86,10 @@ def parse_args():
     status_parser = commands.add_parser('status')
     status_parser.set_defaults(func=status)
     
+    reset_parser = commands.add_parser('reset')
+    reset_parser.set_defaults(func=reset)
+    reset_parser.add_argument('commit', type=oid)
+    
     return parser.parse_args()
     # This should return Namespace(command='init', func=<function 'init' below>) for 'ugit init'
 
@@ -190,3 +194,5 @@ def status(args):
     else:
         print(f'HEAD deached at {HEAD[:10]}')
     
+def reset(args):
+    base.reset(args.commit)
