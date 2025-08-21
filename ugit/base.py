@@ -14,6 +14,7 @@ def init():
     data.init()
     data.update_ref('HEAD', data.RefValue(symbolic=True, value='refs/heads/master'))
 
+# Take a snapshot of current working dir and make tree file(s) out of that
 def write_tree(directory='.'):
     entries = []
     with os.scandir(directory) as it:
@@ -47,6 +48,7 @@ def _iter_tree_entries(oid):
     tree = data.get_object(oid,'tree')
     for entry in tree.decode().splitlines():
         type_, oid, name = entry.split(' ', 2)
+        # each entry in a tree file should look like: <type> <oid> <name>
         yield type_, oid, name
         
 # get_tree uses _iter_tree_entries to recursively parse a tree into a dictionary.
@@ -69,7 +71,8 @@ def get_tree(oid,base_path=''):
     #   'dir/file2.txt': 'oid3',
     #   ...
     # }
-    
+
+# remove everything in the current dir for new read_tree()
 def _empty_current_directory():
     for root, dirnames, filenames in os.walk('.', topdown = False):
         # os.walk returns a tuple (root, dirnames, filenames)
@@ -130,15 +133,18 @@ def checkout (name): # name could be and OID or a branch name
         
     data.update_ref('HEAD', HEAD, deref=False)
 
+# move HEAD to a specific OID
 def reset(oid):
     data.update_ref('HEAD', data.RefValue(symbolic=False, value=oid))
 
+# put a tag name on a commit
 def create_tag(name, oid):
     data.update_ref(os.path.join('refs', 'tags', name), data.RefValue(symbolic=False,value=oid))
 
 def create_branch(name, oid):
     data.update_ref(os.path.join('refs', 'heads', name), data.RefValue(symbolic=False,value=oid))
 
+# return current branch name that HEAD is pointing to
 def get_branch_name():
     HEAD = data.get_ref('HEAD', deref=False)
     if not HEAD.symbolic:
@@ -149,6 +155,7 @@ def get_branch_name():
 
 Commit = namedtuple('Commit', ['tree', 'parent', 'message'])
 
+# loop thru every branch
 def iter_branch_name():
     for refname, _ in data.iter_refs('refs/heads/'):
         yield os.path.relpath(refname, 'refs/heads/')
@@ -174,6 +181,7 @@ def get_commit(oid):
     message = '\n'.join(lines)
     # since the first 3 lines are iterated, the remaining line is the message
     return Commit(tree=tree, parent=parent, message=message)
+    # Commit(<tree_oid>, <parent_oid>, <message>
 
 def iter_commits_and_parents(oids):
     oids = deque(oids)
@@ -191,6 +199,8 @@ def iter_commits_and_parents(oids):
         commit = get_commit(oid)
         oids.appendleft(commit.parent)
 
+# here name could be a name tagged to some refs, then we should find the referenced OID
+# or if name is OID itself -> no need to find anything
 def get_oid(name):
     if name =='@': name =  'HEAD'
     

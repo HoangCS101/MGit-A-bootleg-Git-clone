@@ -9,6 +9,7 @@ import textwrap
 
 from . import base
 from . import data
+from . import diff
 
 def main():
     args = parse_args()
@@ -90,6 +91,10 @@ def parse_args():
     reset_parser.set_defaults(func=reset)
     reset_parser.add_argument('commit', type=oid)
     
+    show_parser = commands.add_parser('show')
+    show_parser.set_defaults(func=show)
+    show_parser.add_argument('oid', default='@', type=oid, nargs='?')
+    
     return parser.parse_args()
     # This should return Namespace(command='init', func=<function 'init' below>) for 'ugit init'
 
@@ -118,7 +123,13 @@ def read_tree(args):
     
 def commit(args):
     print(base.commit(args.message))
-    
+
+def _print_commit(oid, commit, refs=None):
+    refs_str = f' ({", ".join(refs[oid])})' if refs else ''
+    print(f'commit {oid}{refs_str}\n')
+    print(textwrap.indent(commit.message, '    '))
+    print('')
+
 def log(args):
     refs = {}
     for refname, ref in data.iter_refs():
@@ -139,13 +150,24 @@ def log(args):
         # {args.oid} creates a set with a single element, args.oid
         # or else python would treat args.oid as a set of separated characters
         commit = base.get_commit(oid)
-        refs_str = f'({", ".join(refs[oid])})' if oid in refs else ''
-        print(f'commit {oid}{refs_str}\n')
-        print(textwrap.indent(commit.message, '    '))
-        print('')
+        _print_commit(oid, commit, refs.get(oid))
         
         oid = commit.parent
+
+def show(args):
+    if not args.oid:
+        return
+    commit = base.get_commit(args.oid)
+    parent_tree = None
+    if commit.parent:
+        parent_tree = base.get_commit(commit.parent).tree
         
+    _print_commit(args.oid, commit)
+    result = diff.diff_trees(
+        base.get_tree(parent_tree), base.get_tree(commit.tree)
+    )
+    print(result)
+    
 def checkout(args):
     base.checkout(args.commit)
 
